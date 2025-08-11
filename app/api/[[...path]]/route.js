@@ -1,104 +1,354 @@
-import { MongoClient } from 'mongodb'
-import { v4 as uuidv4 } from 'uuid'
 import { NextResponse } from 'next/server'
+import { supabase, generateId } from '../../../lib/supabase.js'
 
-// MongoDB connection
-let client
-let db
-
-async function connectToMongo() {
-  if (!client) {
-    client = new MongoClient(process.env.MONGO_URL)
-    await client.connect()
-    db = client.db(process.env.DB_NAME)
-  }
-  return db
-}
-
-// Helper function to handle CORS
-function handleCORS(response) {
-  response.headers.set('Access-Control-Allow-Origin', process.env.CORS_ORIGINS || '*')
-  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  response.headers.set('Access-Control-Allow-Credentials', 'true')
-  return response
-}
-
-// OPTIONS handler for CORS
-export async function OPTIONS() {
-  return handleCORS(new NextResponse(null, { status: 200 }))
-}
-
-// Route handler function
-async function handleRoute(request, { params }) {
-  const { path = [] } = params
-  const route = `/${path.join('/')}`
-  const method = request.method
-
+export async function GET(request) {
   try {
-    const db = await connectToMongo()
+    const url = new URL(request.url)
+    const pathname = url.pathname
+    const path = pathname.split('/api/')[1] || ''
+    const pathParts = path.split('/')
 
-    // Root endpoint - GET /api/root (since /api/ is not accessible with catch-all)
-    if (route === '/root' && method === 'GET') {
-      return handleCORS(NextResponse.json({ message: "Hello World" }))
-    }
-    // Root endpoint - GET /api/root (since /api/ is not accessible with catch-all)
-    if (route === '/' && method === 'GET') {
-      return handleCORS(NextResponse.json({ message: "Hello World" }))
-    }
-
-    // Status endpoints - POST /api/status
-    if (route === '/status' && method === 'POST') {
-      const body = await request.json()
-      
-      if (!body.client_name) {
-        return handleCORS(NextResponse.json(
-          { error: "client_name is required" }, 
-          { status: 400 }
-        ))
+    // Companies API
+    if (pathParts[0] === 'companies') {
+      if (pathParts[1]) {
+        // Get specific company
+        const { data, error } = await supabase
+          .from('companies')
+          .select('*')
+          .eq('id', pathParts[1])
+          .single()
+        
+        if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+        return NextResponse.json(data || {})
+      } else {
+        // Get all companies
+        const { data, error } = await supabase
+          .from('companies')
+          .select('*')
+          .order('createdAt', { ascending: false })
+        
+        if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+        return NextResponse.json(data || [])
       }
+    }
 
-      const statusObj = {
-        id: uuidv4(),
-        client_name: body.client_name,
-        timestamp: new Date()
+    // Quotes API
+    if (pathParts[0] === 'quotes') {
+      if (pathParts[1]) {
+        // Get specific quote
+        const { data, error } = await supabase
+          .from('quotes')
+          .select(`
+            *,
+            companies (
+              id,
+              name,
+              logo,
+              address,
+              phone,
+              email
+            )
+          `)
+          .eq('id', pathParts[1])
+          .single()
+        
+        if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+        return NextResponse.json(data || {})
+      } else {
+        // Get all quotes
+        const { data, error } = await supabase
+          .from('quotes')
+          .select(`
+            *,
+            companies (
+              id,
+              name,
+              logo
+            )
+          `)
+          .order('createdAt', { ascending: false })
+        
+        if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+        return NextResponse.json(data || [])
       }
-
-      await db.collection('status_checks').insertOne(statusObj)
-      return handleCORS(NextResponse.json(statusObj))
     }
 
-    // Status endpoints - GET /api/status
-    if (route === '/status' && method === 'GET') {
-      const statusChecks = await db.collection('status_checks')
-        .find({})
-        .limit(1000)
-        .toArray()
-
-      // Remove MongoDB's _id field from response
-      const cleanedStatusChecks = statusChecks.map(({ _id, ...rest }) => rest)
-      
-      return handleCORS(NextResponse.json(cleanedStatusChecks))
+    // Purchase Orders API  
+    if (pathParts[0] === 'purchase-orders') {
+      if (pathParts[1]) {
+        // Get specific purchase order
+        const { data, error } = await supabase
+          .from('purchase_orders')
+          .select(`
+            *,
+            companies (
+              id,
+              name,
+              logo,
+              address,
+              phone,
+              email
+            )
+          `)
+          .eq('id', pathParts[1])
+          .single()
+        
+        if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+        return NextResponse.json(data || {})
+      } else {
+        // Get all purchase orders
+        const { data, error } = await supabase
+          .from('purchase_orders')
+          .select(`
+            *,
+            companies (
+              id,
+              name,
+              logo
+            )
+          `)
+          .order('createdAt', { ascending: false })
+        
+        if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+        return NextResponse.json(data || [])
+      }
     }
 
-    // Route not found
-    return handleCORS(NextResponse.json(
-      { error: `Route ${route} not found` }, 
-      { status: 404 }
-    ))
+    return NextResponse.json({ error: 'Route not found' }, { status: 404 })
 
   } catch (error) {
     console.error('API Error:', error)
-    return handleCORS(NextResponse.json(
-      { error: "Internal server error" }, 
-      { status: 500 }
-    ))
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-// Export all HTTP methods
-export const GET = handleRoute
-export const POST = handleRoute
-export const PUT = handleRoute
-export const DELETE = handleRoute
-export const PATCH = handleRoute
+export async function POST(request) {
+  try {
+    const url = new URL(request.url)
+    const pathname = url.pathname
+    const path = pathname.split('/api/')[1] || ''
+    const pathParts = path.split('/')
+    const body = await request.json()
+
+    // Companies API
+    if (pathParts[0] === 'companies') {
+      const newCompany = {
+        id: generateId(),
+        name: body.name,
+        logo: body.logo || '',
+        address: body.address || '',
+        phone: body.phone || '',
+        email: body.email || '',
+        signature: body.signature || '',
+        seal: body.seal || '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+
+      const { data, error } = await supabase
+        .from('companies')
+        .insert([newCompany])
+        .select()
+        .single()
+      
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json(data)
+    }
+
+    // Quotes API
+    if (pathParts[0] === 'quotes') {
+      const newQuote = {
+        id: generateId(),
+        companyId: body.companyId,
+        quoteNumber: body.quoteNumber || `Q-${Date.now()}`,
+        poNumber: body.poNumber || '',
+        billTo: body.billTo || '',
+        billToAddress: body.billToAddress || '',
+        billToContact: body.billToContact || '',
+        items: JSON.stringify(body.items || []),
+        subtotal: body.subtotal || 0,
+        vatRate: body.vatRate || 5,
+        vatAmount: body.vatAmount || 0,
+        totalAmount: body.totalAmount || 0,
+        notes: body.notes || '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+
+      const { data, error } = await supabase
+        .from('quotes')
+        .insert([newQuote])
+        .select()
+        .single()
+      
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json(data)
+    }
+
+    // Purchase Orders API
+    if (pathParts[0] === 'purchase-orders') {
+      const newPO = {
+        id: generateId(),
+        companyId: body.companyId,
+        quoteId: body.quoteId || null,
+        poNumber: body.poNumber || `PO-${Date.now()}`,
+        quoteNumber: body.quoteNumber || '',
+        billTo: body.billTo || '',
+        billToAddress: body.billToAddress || '',
+        billToContact: body.billToContact || '',
+        items: JSON.stringify(body.items || []),
+        subtotal: body.subtotal || 0,
+        vatRate: body.vatRate || 5,
+        vatAmount: body.vatAmount || 0,
+        totalAmount: body.totalAmount || 0,
+        notes: body.notes || '',
+        status: body.status || 'pending',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+
+      const { data, error } = await supabase
+        .from('purchase_orders')
+        .insert([newPO])
+        .select()
+        .single()
+      
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json(data)
+    }
+
+    return NextResponse.json({ error: 'Route not found' }, { status: 404 })
+
+  } catch (error) {
+    console.error('POST API Error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function PUT(request) {
+  try {
+    const url = new URL(request.url)
+    const pathname = url.pathname
+    const path = pathname.split('/api/')[1] || ''
+    const pathParts = path.split('/')
+    const body = await request.json()
+
+    const id = pathParts[1]
+    if (!id) {
+      return NextResponse.json({ error: 'ID required for update' }, { status: 400 })
+    }
+
+    // Companies API
+    if (pathParts[0] === 'companies') {
+      const { data, error } = await supabase
+        .from('companies')
+        .update({
+          ...body,
+          updatedAt: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single()
+      
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json(data)
+    }
+
+    // Quotes API
+    if (pathParts[0] === 'quotes') {
+      const updateData = { ...body }
+      if (updateData.items) {
+        updateData.items = JSON.stringify(updateData.items)
+      }
+      updateData.updatedAt = new Date().toISOString()
+
+      const { data, error } = await supabase
+        .from('quotes')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single()
+      
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json(data)
+    }
+
+    // Purchase Orders API
+    if (pathParts[0] === 'purchase-orders') {
+      const updateData = { ...body }
+      if (updateData.items) {
+        updateData.items = JSON.stringify(updateData.items)
+      }
+      updateData.updatedAt = new Date().toISOString()
+
+      const { data, error } = await supabase
+        .from('purchase_orders')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single()
+      
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json(data)
+    }
+
+    return NextResponse.json({ error: 'Route not found' }, { status: 404 })
+
+  } catch (error) {
+    console.error('PUT API Error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    const url = new URL(request.url)
+    const pathname = url.pathname
+    const path = pathname.split('/api/')[1] || ''
+    const pathParts = path.split('/')
+
+    const id = pathParts[1]
+    if (!id) {
+      return NextResponse.json({ error: 'ID required for delete' }, { status: 400 })
+    }
+
+    // Companies API
+    if (pathParts[0] === 'companies') {
+      const { error } = await supabase
+        .from('companies')
+        .delete()
+        .eq('id', id)
+      
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ success: true })
+    }
+
+    // Quotes API
+    if (pathParts[0] === 'quotes') {
+      const { error } = await supabase
+        .from('quotes')
+        .delete()
+        .eq('id', id)
+      
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ success: true })
+    }
+
+    // Purchase Orders API
+    if (pathParts[0] === 'purchase-orders') {
+      const { error } = await supabase
+        .from('purchase_orders')
+        .delete()
+        .eq('id', id)
+      
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ success: true })
+    }
+
+    return NextResponse.json({ error: 'Route not found' }, { status: 404 })
+
+  } catch (error) {
+    console.error('DELETE API Error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

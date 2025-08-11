@@ -1,14 +1,14 @@
 import './globals.css'
 
 export const metadata = {
-  title: 'Next.js MongoDB Template',
-  description: 'A simple template with App Router, MongoDB, and shadcn/ui',
+  title: 'Quote Generator - Business Quote & Purchase Order Management',
+  description: 'A comprehensive business application for managing quotes, companies, and purchase orders with PDF export capabilities.',
 }
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
+      <body className="min-h-screen bg-background font-sans antialiased">
         {children}
       </body>
     </html>
