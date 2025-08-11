@@ -8,6 +8,11 @@ export async function GET(request) {
     const path = pathname.split('/api/')[1] || ''
     const pathParts = path.split('/')
 
+    // Health check endpoint
+    if (pathParts[0] === 'health') {
+      return NextResponse.json({ status: 'OK', timestamp: new Date().toISOString() })
+    }
+
     // Companies API
     if (pathParts[0] === 'companies') {
       if (pathParts[1]) {
