@@ -99,6 +99,11 @@ export default function PDFGenerator({ open, onClose, data, type }) {
 
   const items = typeof data.items === 'string' ? JSON.parse(data.items || '[]') : data.items || []
   const company = data.companies || {}
+  
+  // Debug logging
+  console.log('PDFGenerator - Company data:', company)
+  console.log('PDFGenerator - Has signature:', !!company.signature)
+  console.log('PDFGenerator - Has seal:', !!company.seal)
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
