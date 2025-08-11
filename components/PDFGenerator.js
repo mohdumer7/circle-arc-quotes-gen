@@ -43,30 +43,27 @@ export default function PDFGenerator({ open, onClose, data, type }) {
 
     try {
       const canvas = await window.html2canvas(contentRef.current, {
-        scale: 2,
+        scale: 1.5,
         useCORS: true,
         allowTaint: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        width: contentRef.current.scrollWidth,
+        height: contentRef.current.scrollHeight
       })
 
       const imgData = canvas.toDataURL('image/png')
       const pdf = new window.jsPDF('p', 'mm', 'a4')
       
       const imgWidth = 210 // A4 width in mm
-      const pageHeight = 295 // A4 height in mm
       const imgHeight = (canvas.height * imgWidth) / canvas.width
-      let heightLeft = imgHeight
-
-      let position = 0
-
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-      heightLeft -= pageHeight
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight
-        pdf.addPage()
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-        heightLeft -= pageHeight
+      
+      // Try to fit on single page first
+      if (imgHeight <= 295) { // A4 height - margins
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight)
+      } else {
+        // If content is too long, scale it down to fit on one page
+        const scaledHeight = 290 // Leave some margin
+        pdf.addImage(imgData, 'PNG', 0, 5, imgWidth, scaledHeight)
       }
 
       const filename = type === 'quote' 
