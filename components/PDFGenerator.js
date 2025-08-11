@@ -206,15 +206,6 @@ export default function PDFGenerator({ open, onClose, data, type }) {
                     </td>
                   </tr>
                 ))}
-                {/* Empty rows for spacing */}
-                {items.length < 10 && Array.from({ length: 10 - items.length }).map((_, index) => (
-                  <tr key={`empty-${index}`} className={((items.length + index) % 2 === 0) ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="border border-gray-300 px-4 py-3">&nbsp;</td>
-                    <td className="border border-gray-300 px-4 py-3">&nbsp;</td>
-                    <td className="border border-gray-300 px-4 py-3">&nbsp;</td>
-                    <td className="border border-gray-300 px-4 py-3">&nbsp;</td>
-                  </tr>
-                ))}
               </tbody>
             </table>
           </div>
