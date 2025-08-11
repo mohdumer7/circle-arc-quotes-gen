@@ -44,23 +44,40 @@ export default function App() {
   const fetchData = async () => {
     try {
       setLoading(true)
+      console.log('Fetching data from APIs...')
+      
+      // Try to fetch with error handling for each API
       const [companiesRes, quotesRes, poRes] = await Promise.all([
-        fetch('/api/companies'),
-        fetch('/api/quotes'),
-        fetch('/api/purchase-orders')
+        fetch('/api/companies').catch(err => {
+          console.error('Companies API failed:', err)
+          return { ok: false, json: () => Promise.resolve([]) }
+        }),
+        fetch('/api/quotes').catch(err => {
+          console.error('Quotes API failed:', err)
+          return { ok: false, json: () => Promise.resolve([]) }
+        }),
+        fetch('/api/purchase-orders').catch(err => {
+          console.error('Purchase Orders API failed:', err)
+          return { ok: false, json: () => Promise.resolve([]) }
+        })
       ])
 
-      const [companiesData, quotesData, poData] = await Promise.all([
-        companiesRes.json(),
-        quotesRes.json(),
-        poRes.json()
-      ])
+      // Handle successful responses or fallback to empty arrays
+      const companiesData = companiesRes.ok ? await companiesRes.json() : []
+      const quotesData = quotesRes.ok ? await quotesRes.json() : []
+      const poData = poRes.ok ? await poRes.json() : []
 
-      setCompanies(companiesData)
-      setQuotes(quotesData)
-      setPurchaseOrders(poData)
+      console.log('Fetched data:', { companies: companiesData.length, quotes: quotesData.length, pos: poData.length })
+
+      setCompanies(companiesData || [])
+      setQuotes(quotesData || [])
+      setPurchaseOrders(poData || [])
     } catch (error) {
       console.error('Error fetching data:', error)
+      // Set empty arrays as fallback
+      setCompanies([])
+      setQuotes([])
+      setPurchaseOrders([])
     } finally {
       setLoading(false)
     }
