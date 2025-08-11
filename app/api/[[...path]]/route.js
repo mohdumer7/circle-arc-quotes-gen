@@ -94,7 +94,9 @@ export async function GET(request) {
               logo,
               address,
               phone,
-              email
+              email,
+              signature,
+              seal
             )
           `)
           .eq('id', pathParts[1])
