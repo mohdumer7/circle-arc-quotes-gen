@@ -121,23 +121,23 @@ export default function PDFGenerator({ open, onClose, data, type }) {
           </DialogTitle>
         </DialogHeader>
 
-        <div ref={contentRef} className="bg-white p-8 text-black">
+        <div ref={contentRef} className="bg-white p-6 text-black max-w-4xl">
           {/* Header */}
-          <div className="flex justify-between items-start mb-8">
+          <div className="flex justify-between items-start mb-6">
             <div className="flex items-start space-x-4">
               {company.logo && (
                 <img 
                   src={company.logo} 
                   alt={`${company.name} logo`}
-                  className="w-20 h-20 object-contain"
+                  className="w-16 h-16 object-contain"
                 />
               )}
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{company.name || 'Company Name'}</h1>
+                <h1 className="text-xl font-bold text-gray-900">{company.name || 'Company Name'}</h1>
                 {company.address && (
-                  <p className="text-sm text-gray-600 mt-1 whitespace-pre-line">{company.address}</p>
+                  <p className="text-xs text-gray-600 mt-1 whitespace-pre-line">{company.address}</p>
                 )}
-                <div className="text-sm text-gray-600 mt-2 space-y-1">
+                <div className="text-xs text-gray-600 mt-2 space-y-1">
                   {company.phone && <p>Phone: {company.phone}</p>}
                   {company.email && <p>Email: {company.email}</p>}
                 </div>
@@ -145,10 +145,10 @@ export default function PDFGenerator({ open, onClose, data, type }) {
             </div>
             
             <div className="text-right">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 {type === 'quote' ? 'QUOTE' : 'PURCHASE ORDER'}
               </h2>
-              <div className="text-sm text-gray-600 space-y-1">
+              <div className="text-xs text-gray-600 space-y-1">
                 <p><span className="font-medium">{type === 'quote' ? 'Quote #:' : 'PO #:'}</span> {type === 'quote' ? data.quoteNumber : data.poNumber}</p>
                 {data.quoteNumber && type === 'purchase-order' && (
                   <p><span className="font-medium">Quote #:</span> {data.quoteNumber}</p>
@@ -162,43 +162,43 @@ export default function PDFGenerator({ open, onClose, data, type }) {
           </div>
 
           {/* Bill To */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Bill To:</h3>
-            <div className="bg-gray-50 p-4 rounded">
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Bill To:</h3>
+            <div className="bg-gray-50 p-3 rounded text-xs">
               <p className="font-medium text-gray-900">{data.billTo || 'Customer Name'}</p>
               {data.billToAddress && (
                 <p className="text-gray-600 mt-1 whitespace-pre-line">{data.billToAddress}</p>
               )}
               {data.billToContact && (
-                <p className="text-gray-600 mt-2">Contact: {data.billToContact}</p>
+                <p className="text-gray-600 mt-1">Contact: {data.billToContact}</p>
               )}
             </div>
           </div>
 
           {/* Items Table */}
-          <div className="mb-8">
-            <table className="w-full border-collapse border border-gray-300">
+          <div className="mb-6">
+            <table className="w-full border-collapse border border-gray-300 text-xs">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="border border-gray-300 px-4 py-3 text-left font-semibold text-gray-900">Description</th>
-                  <th className="border border-gray-300 px-4 py-3 text-center font-semibold text-gray-900 w-20">Qty</th>
-                  <th className="border border-gray-300 px-4 py-3 text-right font-semibold text-gray-900 w-24">Price</th>
-                  <th className="border border-gray-300 px-4 py-3 text-right font-semibold text-gray-900 w-28">Total</th>
+                  <th className="border border-gray-300 px-3 py-2 text-left font-semibold text-gray-900">Description</th>
+                  <th className="border border-gray-300 px-3 py-2 text-center font-semibold text-gray-900 w-16">Qty</th>
+                  <th className="border border-gray-300 px-3 py-2 text-right font-semibold text-gray-900 w-20">Price</th>
+                  <th className="border border-gray-300 px-3 py-2 text-right font-semibold text-gray-900 w-24">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {items.map((item, index) => (
                   <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="border border-gray-300 px-4 py-3 text-gray-900">
+                    <td className="border border-gray-300 px-3 py-2 text-gray-900">
                       {item.description}
                     </td>
-                    <td className="border border-gray-300 px-4 py-3 text-center text-gray-900">
+                    <td className="border border-gray-300 px-3 py-2 text-center text-gray-900">
                       {item.quantity}
                     </td>
-                    <td className="border border-gray-300 px-4 py-3 text-right text-gray-900">
+                    <td className="border border-gray-300 px-3 py-2 text-right text-gray-900">
                       {formatCurrency(item.price)}
                     </td>
-                    <td className="border border-gray-300 px-4 py-3 text-right font-medium text-gray-900">
+                    <td className="border border-gray-300 px-3 py-2 text-right font-medium text-gray-900">
                       {formatCurrency(item.total)}
                     </td>
                   </tr>
@@ -208,10 +208,10 @@ export default function PDFGenerator({ open, onClose, data, type }) {
           </div>
 
           {/* Totals */}
-          <div className="flex justify-end mb-8">
-            <div className="w-80">
-              <div className="bg-gray-50 p-4 rounded">
-                <div className="space-y-2">
+          <div className="flex justify-end mb-6">
+            <div className="w-64">
+              <div className="bg-gray-50 p-3 rounded text-xs">
+                <div className="space-y-1">
                   <div className="flex justify-between">
                     <span className="text-gray-700">Subtotal:</span>
                     <span className="font-medium text-gray-900">{formatCurrency(data.subtotal)}</span>
@@ -220,10 +220,10 @@ export default function PDFGenerator({ open, onClose, data, type }) {
                     <span className="text-gray-700">VAT ({data.vatRate}%):</span>
                     <span className="font-medium text-gray-900">{formatCurrency(data.vatAmount)}</span>
                   </div>
-                  <div className="border-t border-gray-300 pt-2 mt-2">
+                  <div className="border-t border-gray-300 pt-1 mt-1">
                     <div className="flex justify-between">
-                      <span className="text-lg font-semibold text-gray-900">Total:</span>
-                      <span className="text-lg font-bold text-gray-900">{formatCurrency(data.totalAmount)}</span>
+                      <span className="text-sm font-semibold text-gray-900">Total:</span>
+                      <span className="text-sm font-bold text-gray-900">{formatCurrency(data.totalAmount)}</span>
                     </div>
                   </div>
                 </div>
@@ -233,28 +233,29 @@ export default function PDFGenerator({ open, onClose, data, type }) {
 
           {/* Notes */}
           {data.notes && (
-            <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Notes & Remarks:</h3>
-              <div className="bg-gray-50 p-4 rounded">
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-900 mb-2">Notes & Remarks:</h3>
+              <div className="bg-gray-50 p-3 rounded text-xs">
                 <p className="text-gray-700 whitespace-pre-line">{data.notes}</p>
               </div>
             </div>
           )}
 
           {/* Footer with Signature and Seal */}
-          <div className="flex justify-between items-end mt-12">
+          <div className="flex justify-between items-end mt-8">
             <div className="text-center">
               {company.signature && (
                 <div className="mb-2">
                   <img 
                     src={company.signature} 
                     alt="Signature" 
-                    className="w-32 h-16 object-contain mx-auto"
+                    className="w-24 h-12 object-contain mx-auto"
+                    style={{ maxWidth: '100%', height: 'auto' }}
                   />
                 </div>
               )}
-              <div className="border-t border-gray-400 pt-2 w-48">
-                <p className="text-sm text-gray-600">Authorized Signature</p>
+              <div className="border-t border-gray-400 pt-1 w-32 mx-auto">
+                <p className="text-xs text-gray-600">Authorized Signature</p>
               </div>
             </div>
             
@@ -263,15 +264,16 @@ export default function PDFGenerator({ open, onClose, data, type }) {
                 <img 
                   src={company.seal} 
                   alt="Company Seal" 
-                  className="w-20 h-20 object-contain mx-auto mb-2"
+                  className="w-16 h-16 object-contain mx-auto mb-2"
+                  style={{ maxWidth: '100%', height: 'auto' }}
                 />
-                <p className="text-sm text-gray-600">Company Seal</p>
+                <p className="text-xs text-gray-600">Company Seal</p>
               </div>
             )}
           </div>
 
           {/* Footer Info */}
-          <div className="text-center mt-8 pt-4 border-t border-gray-300">
+          <div className="text-center mt-6 pt-2 border-t border-gray-300">
             <p className="text-xs text-gray-500">
               This {type === 'quote' ? 'quote' : 'purchase order'} is valid for 30 days from the date of issue.
             </p>
